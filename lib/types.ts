@@ -22,11 +22,23 @@ export const PERSONAS: { id: PersonaId; label: string; blurb: string }[] = [
   { id: 'kai', label: 'Kai', blurb: 'Story-first, plain English, big-picture journey' },
 ]
 
+export type SessionIntent =
+  | 'recovery'
+  | 'aerobic_endurance'
+  | 'tempo_sweetspot'
+  | 'threshold'
+  | 'vo2max_anaerobic'
+  | 'strength_endurance'
+  | 'skill'
+  | 'race_simulation'
+  | 'brick'
+
 export interface GeoLocation {
   name: string
   lat: number
   lng: number
   timezone: string
+  elevationM: number | null
 }
 
 export interface TravelWindow extends GeoLocation {
@@ -76,6 +88,7 @@ export interface AthleteKPIs {
   bikeFtpWkg: number | null
   runThresholdPace: string | null
   runLthr?: number | null
+  bikeLthr?: number | null
   vo2maxEstimate: number | null
   hrvBaseline: number | null
   rhrBpm: number | null
@@ -100,6 +113,7 @@ export interface TrainingSession {
   keyMetrics: Record<string, string | number>
   source: string
   rawFitData: Record<string, unknown> | null
+  sessionType?: SessionIntent | null
   createdAt: string
   updatedAt: string
 }
@@ -118,12 +132,28 @@ export interface AthleteConcern {
   createdAt: string
 }
 
+export interface DailyReadiness {
+  id: string
+  userId: string
+  date: string
+  hrv: number | null
+  rhr: number | null
+  sleepHours: number | null
+  bodyBattery: number | null
+  subjectiveScore: number | null
+  notes: string | null
+  createdAt: string
+}
+
 export interface ConversationTurn {
   id: string
   userId: string
   role: 'user' | 'assistant'
   content: string
-  personaId: PersonaId
+  // Null for turns saved before persona_id was added, or for turns this
+  // client doesn't have a persona context for. Fall back to the currently
+  // active persona when rendering rather than assuming a value.
+  personaId: PersonaId | null
   turnIndex: number
   createdAt: string
 }
@@ -160,4 +190,5 @@ export interface AthleteState {
   concerns: AthleteConcern[]
   history: ConversationTurn[]
   summaries: unknown[]
+  recentReadiness: DailyReadiness[]
 }
