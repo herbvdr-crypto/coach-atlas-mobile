@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Coach Atlas",
+    "slug": "coach-atlas-mobile",
+    "scheme": "coachatlas",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.coachatlas.app"
+    },
+    "android": {
+      "package": "com.coachatlas.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0F172A"
+      }
+    },
+    "plugins": ["expo-router", "expo-secure-store", "@clerk/expo"],
+    "extra": {
+      "router": {
+        "origin": false
+      }
+    }
+  }
+}
