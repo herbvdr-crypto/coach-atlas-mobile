@@ -1,6 +1,6 @@
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useAthleteState } from '@/context/AthleteStateContext'
+import { useAthleteState, useRefreshOnFocus } from '@/context/AthleteStateContext'
 import { PERSONAS } from '@/lib/types'
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -14,6 +14,7 @@ function Row({ label, value }: { label: string; value: string }) {
 
 export default function ProfileScreen() {
   const { state, loading } = useAthleteState()
+  useRefreshOnFocus()
 
   if (loading || !state) {
     return (

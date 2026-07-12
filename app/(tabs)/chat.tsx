@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { sendChatMessage, updateActivePersona } from '@/lib/api'
-import { useAthleteState } from '@/context/AthleteStateContext'
+import { useAthleteState, useRefreshOnFocus } from '@/context/AthleteStateContext'
 import { PersonaSheet } from '@/components/PersonaSheet'
 import { PERSONAS, type AnthropicMessage, type PersonaId } from '@/lib/types'
 
@@ -26,6 +26,7 @@ interface DisplayMessage {
 export default function ChatScreen() {
   const { getToken } = useAuth()
   const { state, refresh } = useAthleteState()
+  useRefreshOnFocus()
 
   const [personaId, setPersonaId] = useState<PersonaId>('rex')
   const [personaSheetOpen, setPersonaSheetOpen] = useState(false)

@@ -1,8 +1,9 @@
 import { useAuth } from '@clerk/expo'
+import { useRouter, Stack } from 'expo-router'
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
-import { useAthleteState } from '@/context/AthleteStateContext'
+import { useAthleteState, } from '@/context/AthleteStateContext'
 
 function MenuRow({
   icon,
@@ -48,6 +49,7 @@ function MenuRow({
 export default function MoreScreen() {
   const { state, loading, unresolvedConcernCount } = useAthleteState()
   const { signOut } = useAuth()
+  const router = useRouter()
 
   if (loading || !state) {
     return (
@@ -59,14 +61,27 @@ export default function MoreScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         <Text style={{ fontSize: 22, fontWeight: '500', marginBottom: 12 }}>More</Text>
-
-        <MenuRow icon="flag-outline" label="Flags and concerns" badge={unresolvedConcernCount || undefined} />
-        <MenuRow icon="trophy-outline" label="Races" />
-        <MenuRow icon="document-text-outline" label="Coaching notes" />
-        <MenuRow icon="time-outline" label="KPI history" />
-        <MenuRow icon="settings-outline" label="Settings" />
+        <MenuRow
+          icon="flag-outline"
+          label="Flags and concerns"
+          badge={unresolvedConcernCount || undefined}
+          onPress={() => router.push('/(tabs)/more/flags')}
+        />
+        <MenuRow icon="trophy-outline" label="Races" onPress={() => router.push('/(tabs)/more/races')} />
+        <MenuRow
+          icon="document-text-outline"
+          label="Coaching notes"
+          onPress={() => router.push('/(tabs)/more/coaching-notes')}
+        />
+        <MenuRow
+          icon="time-outline"
+          label="KPI history"
+          onPress={() => router.push('/(tabs)/more/kpi-history')}
+        />
+        <MenuRow icon="settings-outline" label="Settings" onPress={() => router.push('/(tabs)/more/settings')} />
         <MenuRow icon="log-out-outline" label="Sign out" danger onPress={() => signOut()} />
       </ScrollView>
     </SafeAreaView>

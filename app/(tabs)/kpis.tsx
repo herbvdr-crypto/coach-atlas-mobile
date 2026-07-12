@@ -1,6 +1,6 @@
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useAthleteState } from '@/context/AthleteStateContext'
+import { useAthleteState, useRefreshOnFocus } from '@/context/AthleteStateContext'
 
 function KpiCard({ label, value }: { label: string; value: string }) {
   return (
@@ -13,6 +13,7 @@ function KpiCard({ label, value }: { label: string; value: string }) {
 
 export default function KpisScreen() {
   const { state, loading } = useAthleteState()
+  useRefreshOnFocus()
 
   if (loading || !state) {
     return (

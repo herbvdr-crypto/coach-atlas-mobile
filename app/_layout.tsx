@@ -18,7 +18,10 @@ function getPublishableKey(): string {
 const publishableKey = getPublishableKey()
 
 function AuthGate() {
-  const { isLoaded, isSignedIn } = useAuth()
+  // Without this, a session with a pending Clerk "session task" briefly
+  // reports isSignedIn: false right after sign-in completes, bouncing the
+  // user straight back to the sign-in screen even though auth succeeded.
+  const { isLoaded, isSignedIn } = useAuth({ treatPendingAsSignedOut: false })
   const segments = useSegments()
   const router = useRouter()
 

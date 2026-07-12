@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router'
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
-import { useAthleteState } from '@/context/AthleteStateContext'
+import { useAthleteState, useRefreshOnFocus } from '@/context/AthleteStateContext'
 import type { TrainingSession } from '@/lib/types'
 
 function SessionRow({ session, onPress }: { session: TrainingSession; onPress: () => void }) {
@@ -37,6 +37,7 @@ function SessionRow({ session, onPress }: { session: TrainingSession; onPress: (
 
 export default function SessionsScreen() {
   const { state, loading } = useAthleteState()
+  useRefreshOnFocus()
   const router = useRouter()
 
   if (loading || !state) {
@@ -48,23 +49,31 @@ export default function SessionsScreen() {
   }
 
   const today = new Date().toISOString().slice(0, 10)
-  const completed = state.sessions.filter((s) => !s.isPlanned && s.date <= today).slice(0, 8)
-  const upcoming = state.sessions.filter((s) => s.isPlanned && s.date >= today).slice(0, 8)
+  const completed = state.sessions
+    .filter((s) => !s.isPlanned && s.date <= today)
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 8)
+  const upcoming = state.sessions
+    .filter((s) => s.isPlanned && s.date >= today)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 8)
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         <Text style={{ fontSize: 22, fontWeight: '500', marginBottom: 20 }}>Sessions</Text>
 
-        <Text style={{ fontSize: 12, color: '#9ca3af', marginBottom: 8, textTransform: 'uppercase' }}>Recent</Text>
-        {completed.map((s) => (
+        <Text style={{ fontSize: 12, color: '#9ca3af', marginBottom: 8, textTransform: 'uppercase' }}>
+          Upcoming
+        </Text>
+        {upcoming.map((s) => (
           <SessionRow key={s.id} session={s} onPress={() => router.push(`/(tabs)/sessions/${s.id}`)} />
         ))}
 
         <Text style={{ fontSize: 12, color: '#9ca3af', marginTop: 16, marginBottom: 8, textTransform: 'uppercase' }}>
-          Upcoming
+          Past
         </Text>
-        {upcoming.map((s) => (
+        {completed.map((s) => (
           <SessionRow key={s.id} session={s} onPress={() => router.push(`/(tabs)/sessions/${s.id}`)} />
         ))}
 
