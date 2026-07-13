@@ -81,3 +81,8 @@ export function updateActivePersona(getToken: TokenGetter, personaId: PersonaId)
     }),
   })
 }
+// GET /api/athlete/usage — returns only percentage-used and warning state,
+// never raw dollar figures (deliberately, matching the web app's approach).
+export function fetchUsageStatus(getToken: TokenGetter) {
+  return authedFetch('/api/athlete/usage', getToken)
+}

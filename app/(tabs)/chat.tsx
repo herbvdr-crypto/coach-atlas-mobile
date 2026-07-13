@@ -12,7 +12,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
-import { sendChatMessage, updateActivePersona } from '@/lib/api'
+import { sendChatMessage, updateActivePersona, fetchUsageStatus } from '@/lib/api'
 import { useAthleteState, useRefreshOnFocus } from '@/context/AthleteStateContext'
 import { PersonaSheet } from '@/components/PersonaSheet'
 import { PERSONAS, type AnthropicMessage, type PersonaId } from '@/lib/types'
@@ -30,6 +30,14 @@ export default function ChatScreen() {
 
   const [personaId, setPersonaId] = useState<PersonaId>('rex')
   const [personaSheetOpen, setPersonaSheetOpen] = useState(false)
+  const [usageStatus, setUsageStatus] = useState<{ pctUsed: number; isWarning: boolean; isBlocked: boolean } | null>(null)
+  const [showUsagePct, setShowUsagePct] = useState(false)
+
+  useEffect(() => {
+    fetchUsageStatus(getToken)
+      .then(setUsageStatus)
+      .catch(() => {})
+  }, [])
   const [messages, setMessages] = useState<DisplayMessage[]>([])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -110,9 +118,38 @@ export default function ChatScreen() {
         }}
       >
         <Text style={{ fontSize: 18, fontWeight: '500' }}>{currentPersona.label}</Text>
-        <TouchableOpacity onPress={() => setPersonaSheetOpen(true)} hitSlop={12}>
-          <Ionicons name="ellipsis-horizontal" size={20} color="#6b7280" />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          {usageStatus && (
+            <TouchableOpacity
+              onPress={() => setShowUsagePct((v) => !v)}
+              hitSlop={10}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}
+            >
+              {(showUsagePct || usageStatus.isBlocked) && (
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: '500',
+                    color: usageStatus.isBlocked ? '#dc2626' : usageStatus.isWarning ? '#b45309' : '#6b7280',
+                  }}
+                >
+                  {usageStatus.isBlocked ? 'Limit reached' : `${usageStatus.pctUsed}%`}
+                </Text>
+              )}
+              <View
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: 4,
+                  backgroundColor: usageStatus.isBlocked ? '#dc2626' : usageStatus.isWarning ? '#f59e0b' : '#22c55e',
+                }}
+              />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity onPress={() => setPersonaSheetOpen(true)} hitSlop={12}>
+            <Ionicons name="ellipsis-horizontal" size={20} color="#6b7280" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <KeyboardAvoidingView
