@@ -12,6 +12,18 @@ if (!API_URL) {
 // are short-lived and Clerk handles refresh internally.
 type TokenGetter = () => Promise<string | null>
 
+// Error that keeps the HTTP status and the server's athlete-facing
+// message, so callers can distinguish a deliberate block (usage limit,
+// rate limit, subscription gate) from a real connectivity failure.
+export class ApiError extends Error {
+  status: number
+  constructor(status: number, message: string) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
 async function authedFetch(
   path: string,
   getToken: TokenGetter,
@@ -30,8 +42,18 @@ async function authedFetch(
   })
 
   if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`${path} failed: ${res.status} ${text}`)
+    // Deliberate blocks (429 usage/rate limit, 402 subscription gate)
+    // carry an athlete-facing message crafted server-side. Preserve it
+    // and the status so screens can show the real reason instead of a
+    // misleading "check your connection" (F10.5 / F9.2 parity).
+    let message = ''
+    try {
+      const body = await res.json()
+      message = body?.message || body?.error || ''
+    } catch {
+      message = await res.text().catch(() => '')
+    }
+    throw new ApiError(res.status, message || `${path} failed: ${res.status}`)
   }
 
   return res.json()

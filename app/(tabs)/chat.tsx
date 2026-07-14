@@ -12,7 +12,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
-import { sendChatMessage, updateActivePersona, fetchUsageStatus } from '@/lib/api'
+import { ApiError, sendChatMessage, updateActivePersona, fetchUsageStatus } from '@/lib/api'
 import { useAthleteState, useRefreshOnFocus } from '@/context/AthleteStateContext'
 import { PersonaSheet } from '@/components/PersonaSheet'
 import { PERSONAS, type AnthropicMessage, type PersonaId } from '@/lib/types'
@@ -74,20 +74,34 @@ export default function ChatScreen() {
 
       const data = await sendChatMessage(() => getToken(), anthropicMessages, personaId)
 
+      // The server now runs the full agent turn — tools are executed
+      // server-side with real, awaited results (F10.1 fix) — so what
+      // arrives here is always the FINAL text of the turn.
       const textBlock = data.content?.find((b: { type: string }) => b.type === 'text')
-      const replyText = textBlock?.text ?? '✓ Done'
+      const replyText: string =
+        data.text ?? textBlock?.text ?? 'I processed your request. Let me know if you need anything else.'
 
       setMessages((prev) => [...prev, { id: `assistant-${Date.now()}`, role: 'assistant', text: replyText }])
 
-      // A tool call may have changed profile/KPIs/sessions — refresh
-      // the shared state so other tabs stay current.
-      if (data.stop_reason === 'tool_use') {
+      // Tools ran and changed profile/KPIs/sessions — refresh the shared
+      // state so other tabs reflect what the DB now actually holds.
+      if (data.toolsExecuted?.length || data.stop_reason === 'tool_use') {
         refresh()
       }
     } catch (e) {
+      // Deliberate blocks (usage limit, rate limit, subscription gate)
+      // carry a server-crafted message — show that, not a misleading
+      // connectivity error (F10.5 / F9.2 parity).
+      const isBlock = e instanceof ApiError && (e.status === 429 || e.status === 402)
       setMessages((prev) => [
         ...prev,
-        { id: `error-${Date.now()}`, role: 'assistant', text: "Couldn't reach the coach. Check your connection and try again." },
+        {
+          id: `error-${Date.now()}`,
+          role: 'assistant',
+          text: isBlock && e.message
+            ? e.message
+            : "Couldn't reach the coach. Check your connection and try again.",
+        },
       ])
     } finally {
       setSending(false)
