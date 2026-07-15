@@ -7,4 +7,5 @@ dist/
 *.key
 *.mobileprovision
 .DS_Store
-expo-env.d.ts
+expo-env.d.ts/android
+/ios
