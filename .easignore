@@ -10,3 +10,8 @@ dist/
 expo-env.d.ts
 /android
 /ios
+android/
+android_backup/
+ios/
+dist/
+.git/
