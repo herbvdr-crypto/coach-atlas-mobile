@@ -33,6 +33,10 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: '#111827',
         tabBarInactiveTintColor: '#9ca3af',
+        // Without this the tab bar wedges between the chat input and the
+        // keyboard on Android. Hiding it while typing gives the standard
+        // messaging-app layout: input directly above the keyboard.
+        tabBarHideOnKeyboard: true,
       }}
     >
       <Tabs.Screen

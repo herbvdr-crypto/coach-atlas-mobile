@@ -6,7 +6,8 @@ import { useAthleteState, useRefreshOnFocus } from '@/context/AthleteStateContex
 import type { TrainingSession } from '@/lib/types'
 
 function SessionRow({ session, onPress }: { session: TrainingSession; onPress: () => void }) {
-  const done = !session.isPlanned || session.completedAsPlanned !== null
+  const skipped = session.skipped === true
+  const done = !skipped && (!session.isPlanned || session.completedAsPlanned !== null)
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -18,15 +19,20 @@ function SessionRow({ session, onPress }: { session: TrainingSession; onPress: (
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 8,
+        opacity: skipped ? 0.65 : 1,
       }}
     >
       <View>
         <Text style={{ fontSize: 14 }}>{session.title ?? session.discipline}</Text>
         <Text style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
-          {new Date(session.date).toDateString()}
+          {new Date(session.date + 'T12:00:00').toDateString()}
         </Text>
       </View>
-      {done ? (
+      {skipped ? (
+        <Text style={{ fontSize: 11, color: '#6b7280', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
+          Skipped
+        </Text>
+      ) : done ? (
         <Ionicons name="checkmark" size={18} color="#16a34a" />
       ) : (
         <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
@@ -48,13 +54,17 @@ export default function SessionsScreen() {
     )
   }
 
-  const today = new Date().toISOString().slice(0, 10)
+  // Device-LOCAL calendar day (en-CA = YYYY-MM-DD) — the UTC version put
+  // early-morning sessions on the wrong side of Upcoming/Past for any
+  // athlete east of UTC (F10.4 family).
+  const today = new Date().toLocaleDateString('en-CA')
   const completed = state.sessions
-    .filter((s) => !s.isPlanned && s.date <= today)
+    // Past = completions AND skips — a skip is resolved history, never upcoming
+    .filter((s) => (!s.isPlanned && s.date <= today) || s.skipped === true)
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 8)
   const upcoming = state.sessions
-    .filter((s) => s.isPlanned && s.date >= today)
+    .filter((s) => s.isPlanned && s.skipped !== true && s.date >= today)
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 8)
 

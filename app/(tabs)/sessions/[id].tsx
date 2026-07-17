@@ -44,7 +44,11 @@ export default function SessionDetailScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 0 }}>
-        <Field label="Date" value={new Date(session.date).toDateString()} />
+        <Field label="Date" value={new Date(session.date + 'T12:00:00').toDateString()} />
+        <Field
+          label="Status"
+          value={session.skipped ? 'Skipped (deliberately not done)' : session.isPlanned ? 'Planned' : 'Completed'}
+        />
         <Field label="Discipline" value={session.discipline} />
         <Field label="Duration" value={session.durationMinutes ? `${session.durationMinutes} min` : ''} />
         <Field label="Distance" value={session.distanceKm ? `${session.distanceKm} km` : ''} />

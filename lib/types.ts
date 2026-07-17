@@ -102,6 +102,8 @@ export interface TrainingSession {
   title: string | null
   discipline: Discipline
   isPlanned: boolean
+  // Set 6 lifecycle: deliberately-not-done state (stays planned, never completed)
+  skipped?: boolean
   wasPlanned: boolean | null
   completedAsPlanned: boolean | null
   durationMinutes: number | null

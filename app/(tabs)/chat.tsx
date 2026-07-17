@@ -1,18 +1,21 @@
 import { useAuth } from '@clerk/expo'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   FlatList,
-  KeyboardAvoidingView,
   Platform,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native'
+// RN's built-in KeyboardAvoidingView is broken on Android under SDK 54's
+// mandatory edge-to-edge (adjustResize no longer applies). This drop-in
+// replacement tracks the keyboard natively on both platforms.
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
-import { ApiError, sendChatMessage, updateActivePersona, fetchUsageStatus } from '@/lib/api'
+import { sendChatMessage, updateActivePersona, fetchUsageStatus } from '@/lib/api'
 import { useAthleteState, useRefreshOnFocus } from '@/context/AthleteStateContext'
 import { PersonaSheet } from '@/components/PersonaSheet'
 import { PERSONAS, type AnthropicMessage, type PersonaId } from '@/lib/types'
@@ -28,7 +31,7 @@ export default function ChatScreen() {
   const { state, refresh } = useAthleteState()
   useRefreshOnFocus()
 
-  const [personaId, setPersonaId] = useState<PersonaId>('rex')
+  const [personaId, setPersonaId] = useState<PersonaId>('kai')
   const [personaSheetOpen, setPersonaSheetOpen] = useState(false)
   const [usageStatus, setUsageStatus] = useState<{ pctUsed: number; isWarning: boolean; isBlocked: boolean } | null>(null)
   const [showUsagePct, setShowUsagePct] = useState(false)
@@ -47,7 +50,7 @@ export default function ChatScreen() {
   // chat continuous with whatever was last said on web.
   useEffect(() => {
     if (!state) return
-    setPersonaId(state.profile?.activePersonaId ?? 'rex')
+    setPersonaId(state.profile?.activePersonaId ?? 'kai')
     const hydrated = state.history
       .filter((t) => typeof t.content === 'string')
       .map((t) => ({ id: t.id, role: t.role, text: t.content }))
@@ -55,6 +58,11 @@ export default function ChatScreen() {
   }, [state])
 
   const currentPersona = PERSONAS.find((p) => p.id === personaId) ?? PERSONAS[0]
+
+  // The FlatList is `inverted` (standard chat-app pattern): index 0 renders
+  // at the visual bottom, so the list opens pinned to the newest message
+  // with no scroll-on-mount hacks. Data must therefore be newest-first.
+  const invertedMessages = useMemo(() => [...messages].reverse(), [messages])
 
   const handleSend = useCallback(async () => {
     const text = input.trim()
@@ -64,6 +72,8 @@ export default function ChatScreen() {
     setMessages((prev) => [...prev, userMsg])
     setInput('')
     setSending(true)
+    // Snap back to the newest message even if the user had scrolled up.
+    listRef.current?.scrollToOffset({ offset: 0, animated: true })
 
     try {
       // Build the Anthropic-format message list from display history.
@@ -74,34 +84,20 @@ export default function ChatScreen() {
 
       const data = await sendChatMessage(() => getToken(), anthropicMessages, personaId)
 
-      // The server now runs the full agent turn — tools are executed
-      // server-side with real, awaited results (F10.1 fix) — so what
-      // arrives here is always the FINAL text of the turn.
       const textBlock = data.content?.find((b: { type: string }) => b.type === 'text')
-      const replyText: string =
-        data.text ?? textBlock?.text ?? 'I processed your request. Let me know if you need anything else.'
+      const replyText = textBlock?.text ?? '✓ Done'
 
       setMessages((prev) => [...prev, { id: `assistant-${Date.now()}`, role: 'assistant', text: replyText }])
 
-      // Tools ran and changed profile/KPIs/sessions — refresh the shared
-      // state so other tabs reflect what the DB now actually holds.
-      if (data.toolsExecuted?.length || data.stop_reason === 'tool_use') {
+      // A tool call may have changed profile/KPIs/sessions — refresh
+      // the shared state so other tabs stay current.
+      if (data.stop_reason === 'tool_use') {
         refresh()
       }
     } catch (e) {
-      // Deliberate blocks (usage limit, rate limit, subscription gate)
-      // carry a server-crafted message — show that, not a misleading
-      // connectivity error (F10.5 / F9.2 parity).
-      const isBlock = e instanceof ApiError && (e.status === 429 || e.status === 402)
       setMessages((prev) => [
         ...prev,
-        {
-          id: `error-${Date.now()}`,
-          role: 'assistant',
-          text: isBlock && e.message
-            ? e.message
-            : "Couldn't reach the coach. Check your connection and try again.",
-        },
+        { id: `error-${Date.now()}`, role: 'assistant', text: "Couldn't reach the coach. Check your connection and try again." },
       ])
     } finally {
       setSending(false)
@@ -168,15 +164,15 @@ export default function ChatScreen() {
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={90}
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <FlatList
           ref={listRef}
-          data={messages}
+          data={invertedMessages}
+          inverted
           keyExtractor={(m) => m.id}
           contentContainerStyle={{ padding: 16, gap: 10 }}
-          onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
           renderItem={({ item }) => (
             <View
               style={{
