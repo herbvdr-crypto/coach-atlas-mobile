@@ -6,12 +6,20 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://coach-atlas-swart.vercel.app",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bGl0ZXJhdGUtdnVsdHVyZS04OS5jbGVyay5hY2NvdW50cy5kZXYk"
+      }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://coach-atlas-swart.vercel.app",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bGl0ZXJhdGUtdnVsdHVyZS04OS5jbGVyay5hY2NvdW50cy5kZXYk"
       }
     },
     "production": {
