@@ -1,0 +1,3 @@
+[33m4595593[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Fix mangled .gitignore (fused expo-env.d.ts//android line), untrack native folders, add .easignore
+[33m2ad08f5[m Set 6 mobile: skipped sessions out of Upcoming, Skipped badge, status field, local-day fix
+[33m96dbe98[m Stop tracking android/ folder for real this time

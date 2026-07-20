@@ -22,14 +22,18 @@ function SessionRow({ session, onPress }: { session: TrainingSession; onPress: (
         opacity: skipped ? 0.65 : 1,
       }}
     >
-      <View>
-        <Text style={{ fontSize: 14 }}>{session.title ?? session.discipline}</Text>
+      {/* flex:1 + numberOfLines keeps long titles from pushing the
+          badge/checkmark off-screen (seen live: "Morning Run — Düsseldorf…") */}
+      <View style={{ flex: 1, marginRight: 10 }}>
+        <Text style={{ fontSize: 14 }} numberOfLines={1} ellipsizeMode="tail">
+          {session.title ?? session.discipline}
+        </Text>
         <Text style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
           {new Date(session.date + 'T12:00:00').toDateString()}
         </Text>
       </View>
       {skipped ? (
-        <Text style={{ fontSize: 11, color: '#6b7280', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
+        <Text style={{ fontSize: 11, color: '#6b7280', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, flexShrink: 0 }}>
           Skipped
         </Text>
       ) : done ? (

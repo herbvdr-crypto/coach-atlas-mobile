@@ -53,6 +53,9 @@ export default function ChatScreen() {
     setPersonaId(state.profile?.activePersonaId ?? 'kai')
     const hydrated = state.history
       .filter((t) => typeof t.content === 'string')
+      // Legacy system-marker rows ("[Updating your profile: ...]" etc.) are
+      // bookkeeping, not conversation — the web client hides them too.
+      .filter((t) => !/^\[(Updating your profile|Uploading|System)/i.test((t.content as string).trim()))
       .map((t) => ({ id: t.id, role: t.role, text: t.content }))
     setMessages(hydrated)
   }, [state])
@@ -95,9 +98,20 @@ export default function ChatScreen() {
         refresh()
       }
     } catch (e) {
+      // Deliberate server blocks carry their status — surface the real
+      // reason instead of a generic connection error. NOTE (Play/App Store
+      // policy): the subscription message must inform, never steer to an
+      // external purchase — no links, no buttons, no checkout mention.
+      const status = (e as { status?: number })?.status
+      const text =
+        status === 402
+          ? 'Your trial has ended. Manage your subscription from the Coach Atlas website, then come back here — all your training data is safe.'
+          : status === 429
+          ? 'Easy — a few too many messages at once. Give it a moment and try again.'
+          : "Couldn't reach the coach. Check your connection and try again."
       setMessages((prev) => [
         ...prev,
-        { id: `error-${Date.now()}`, role: 'assistant', text: "Couldn't reach the coach. Check your connection and try again." },
+        { id: `error-${Date.now()}`, role: 'assistant', text },
       ])
     } finally {
       setSending(false)

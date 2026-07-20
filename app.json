@@ -14,6 +14,7 @@
     "android": {
       "package": "com.coachatlas.app",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0F172A"
       }
     },
@@ -21,7 +22,16 @@
       "expo-router",
       "expo-secure-store",
       "@clerk/expo",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#0F172A"
+        }
+      ]
     ],
     "extra": {
       "router": {
@@ -30,6 +40,7 @@
       "eas": {
         "projectId": "7c7e32bb-ced2-466a-b414-f27aaabe21dd"
       }
-    }
+    },
+    "icon": "./assets/icon.png"
   }
 }
