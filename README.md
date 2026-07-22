@@ -1,4 +1,4 @@
-# Coach Atlas — Mobile
+# Kaidenz — Mobile
 
 Expo Router app. Chat-first, calling the existing Vercel API routes as-is —
 no separate backend. Cross-device chat continuity comes free from

@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "Kaidense",
+    "name": "Kaidenz",
     "slug": "coach-atlas-mobile",
-    "scheme": "kaidense",
+    "scheme": "kaidenz",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.kaidense.app"
+      "bundleIdentifier": "com.kaidenz.app"
     },
     "android": {
-      "package": "com.kaidense.app",
+      "package": "com.kaidenz.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0F172A"

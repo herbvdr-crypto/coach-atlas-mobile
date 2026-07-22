@@ -60,7 +60,7 @@ export default function SignInScreen() {
     setError(null)
     setGoogleSubmitting(true)
     try {
-      const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'kaidense', path: 'sso-callback' })
+      const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'kaidenz', path: 'sso-callback' })
       console.log('[GoogleSignIn] redirectUrl:', redirectUrl)
       const result = await startSSOFlow({
         strategy: 'oauth_google',
@@ -101,7 +101,7 @@ export default function SignInScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, justifyContent: 'center', padding: 24 }}>
-      <Text style={{ fontSize: 24, fontWeight: '600', marginBottom: 24 }}>Kaidense</Text>
+      <Text style={{ fontSize: 24, fontWeight: '600', marginBottom: 24 }}>Kaidenz</Text>
 
       <TouchableOpacity
         onPress={onGoogleSignIn}
