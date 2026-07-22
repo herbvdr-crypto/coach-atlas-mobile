@@ -1,6 +1,6 @@
 import { Redirect } from 'expo-router'
 
-// The OAuth redirect URI (coachatlas://sso-callback) is also, structurally,
+// The OAuth redirect URI (kaidense://sso-callback) is also, structurally,
 // a valid in-app route path — Expo Router intercepts every incoming link
 // matching the app's scheme and tries to match it against a route file.
 // Without this file it shows "Unmatched Route" right after a successful

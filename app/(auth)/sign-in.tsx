@@ -60,7 +60,7 @@ export default function SignInScreen() {
     setError(null)
     setGoogleSubmitting(true)
     try {
-      const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'coachatlas', path: 'sso-callback' })
+      const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'kaidense', path: 'sso-callback' })
       console.log('[GoogleSignIn] redirectUrl:', redirectUrl)
       const result = await startSSOFlow({
         strategy: 'oauth_google',
