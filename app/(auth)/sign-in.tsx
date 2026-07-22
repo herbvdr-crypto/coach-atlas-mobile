@@ -101,7 +101,7 @@ export default function SignInScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, justifyContent: 'center', padding: 24 }}>
-      <Text style={{ fontSize: 24, fontWeight: '600', marginBottom: 24 }}>Coach Atlas</Text>
+      <Text style={{ fontSize: 24, fontWeight: '600', marginBottom: 24 }}>Kaidense</Text>
 
       <TouchableOpacity
         onPress={onGoogleSignIn}

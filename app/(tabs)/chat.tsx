@@ -105,7 +105,7 @@ export default function ChatScreen() {
       const status = (e as { status?: number })?.status
       const text =
         status === 402
-          ? 'Your trial has ended. Manage your subscription from the Coach Atlas website, then come back here — all your training data is safe.'
+          ? 'Your trial has ended. Manage your subscription from the Kaidense website, then come back here — all your training data is safe.'
           : status === 429
           ? 'Easy — a few too many messages at once. Give it a moment and try again.'
           : "Couldn't reach the coach. Check your connection and try again."
