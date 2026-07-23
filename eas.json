@@ -8,8 +8,8 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://coach-atlas-swart.vercel.app",
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bGl0ZXJhdGUtdnVsdHVyZS04OS5jbGVyay5hY2NvdW50cy5kZXYk"
+        "EXPO_PUBLIC_API_URL": "https://kaidenz.ai",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsua2FpZGVuei5haSQ"
       }
     },
     "preview": {
@@ -18,15 +18,15 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://coach-atlas-swart.vercel.app",
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bGl0ZXJhdGUtdnVsdHVyZS04OS5jbGVyay5hY2NvdW50cy5kZXYk"
+        "EXPO_PUBLIC_API_URL": "https://kaidenz.ai",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsua2FpZGVuei5haSQ"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://coach-atlas-swart.vercel.app",
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bGl0ZXJhdGUtdnVsdHVyZS04OS5jbGVyay5hY2NvdW50cy5kZXYk"
+        "EXPO_PUBLIC_API_URL": "https://kaidenz.ai",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsua2FpZGVuei5haSQ"
       }
     }
   },
