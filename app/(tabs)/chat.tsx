@@ -33,6 +33,9 @@ export default function ChatScreen() {
 
   const [personaId, setPersonaId] = useState<PersonaId>('kai')
   const [personaSheetOpen, setPersonaSheetOpen] = useState(false)
+  // Cap UX: fair-use soft-warning (once per app session, dismissible)
+  const [usageNotice, setUsageNotice] = useState<number | null>(null)
+  const usageNoticeDismissed = useRef(false)
   const [usageStatus, setUsageStatus] = useState<{ pctUsed: number; isWarning: boolean; isBlocked: boolean } | null>(null)
   const [showUsagePct, setShowUsagePct] = useState(false)
 
@@ -87,6 +90,10 @@ export default function ChatScreen() {
 
       const data = await sendChatMessage(() => getToken(), anthropicMessages, personaId)
 
+      if ((data as any).usage?.isWarning && !usageNoticeDismissed.current) {
+        setUsageNotice(Math.min(Math.round((data as any).usage.pctUsed), 100))
+      }
+
       const textBlock = data.content?.find((b: { type: string }) => b.type === 'text')
       const replyText = textBlock?.text ?? '✓ Done'
 
@@ -103,8 +110,13 @@ export default function ChatScreen() {
       // policy): the subscription message must inform, never steer to an
       // external purchase — no links, no buttons, no checkout mention.
       const status = (e as { status?: number })?.status
+      // Prefer the server's crafted message (fair-use cap vs rate limit vs
+      // subscription each explain themselves) — fallbacks cover offline.
+      const serverMsg = (e as Error)?.message
       const text =
-        status === 402
+        (status === 402 || status === 429) && serverMsg && !serverMsg.includes('failed:')
+          ? serverMsg
+          : status === 402
           ? 'Your trial has ended. Manage your subscription from the Kaidenz website, then come back here — all your training data is safe.'
           : status === 429
           ? 'Easy — a few too many messages at once. Give it a moment and try again.'
@@ -206,6 +218,19 @@ export default function ChatScreen() {
         {sending && (
           <View style={{ paddingHorizontal: 16, paddingBottom: 4 }}>
             <ActivityIndicator size="small" />
+          </View>
+        )}
+
+        {usageNotice !== null && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10,
+            marginHorizontal: 12, marginBottom: 6, backgroundColor: '#FFF8E7',
+            borderWidth: 1, borderColor: '#F5A62360', borderRadius: 10,
+            paddingHorizontal: 12, paddingVertical: 8 }}>
+            <Text style={{ flex: 1, fontSize: 12.5, color: '#7A6420' }}>
+              You've used about {usageNotice}% of this month's fair-use allowance — it resets on the 1st.
+            </Text>
+            <Text onPress={() => { usageNoticeDismissed.current = true; setUsageNotice(null) }}
+              style={{ fontSize: 14, color: '#9A8440', paddingHorizontal: 4 }}>✕</Text>
           </View>
         )}
 
