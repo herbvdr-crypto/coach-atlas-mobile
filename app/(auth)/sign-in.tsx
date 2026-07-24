@@ -1,49 +1,47 @@
-import { useSignIn, useSSO } from '@clerk/expo'
+import { useSignIn } from '@clerk/expo'
+import { useSignInWithGoogle } from '@clerk/expo/google'
 import { useRouter, type Href } from 'expo-router'
-import { useEffect, useState } from 'react'
-import { Text, TextInput, TouchableOpacity, View, ActivityIndicator, Platform } from 'react-native'
+import { useState } from 'react'
+import { Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import * as AuthSession from 'expo-auth-session'
-import * as WebBrowser from 'expo-web-browser'
 
-// Required once at module scope so the browser-based OAuth flow can
-// correctly complete and hand control back to the app.
-WebBrowser.maybeCompleteAuthSession()
-
-// Warms up Android's browser ahead of time so the Google sign-in sheet
-// opens faster — no-op on iOS. See Expo's auth guide for why this helps.
-function useWarmUpBrowser() {
-  useEffect(() => {
-    if (Platform.OS !== 'android') return
-    void WebBrowser.warmUpAsync()
-    return () => {
-      void WebBrowser.coolDownAsync()
-    }
-  }, [])
-}
+// ── Auth strategy note (Jul 2026) ───────────────────────────────
+// Google sign-in here is the NATIVE flow (Android Credential Manager /
+// iOS ASAuthorization) via @clerk/expo/google — no browser, no redirect.
+// The previous browser-based useSSO flow created sessions whose
+// browser→native handoff silently died on the production Clerk instance
+// (~30-60s after sign-in; reproduced on 3.7.2 and 3.7.8 store builds).
+// Native flow creates the session directly on the app's own client, so
+// the failing mechanism doesn't exist. Requires: expo-crypto, Google
+// Cloud Android OAuth clients (per signing cert SHA), the Web client id,
+// and env vars EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID /
+// EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID.
+//
+// The email-code path exists because SSO-created web accounts have no
+// password — without it, those users could never sign in on mobile.
 
 export default function SignInScreen() {
-  useWarmUpBrowser()
-
-  // Core 3 API: signIn.password() returns { error } instead of throwing,
+  // Core 3 API: factor methods return { error } instead of throwing,
   // and signIn.finalize() replaces the old setActive() call.
   const { signIn, fetchStatus } = useSignIn()
-  const { startSSOFlow } = useSSO()
+  const { startGoogleAuthenticationFlow } = useSignInWithGoogle()
   const router = useRouter()
+
+  const [mode, setMode] = useState<'password' | 'code'>('password')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [code, setCode] = useState('')
+  const [codeSent, setCodeSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [googleSubmitting, setGoogleSubmitting] = useState(false)
   const submitting = fetchStatus === 'fetching'
 
-  async function onSubmit() {
-    setError(null)
-    const { error: signInError } = await signIn.password({ emailAddress: email, password })
-    if (signInError) {
-      const err = signInError as unknown as { errors?: { message?: string }[]; message?: string }
-      setError(err.errors?.[0]?.message ?? err.message ?? 'Sign-in failed')
-      return
-    }
+  function clerkMessage(e: unknown, fallback: string): string {
+    const err = e as { errors?: { message?: string }[]; message?: string }
+    return err?.errors?.[0]?.message ?? err?.message ?? fallback
+  }
+
+  async function finalizeSignIn() {
     if (signIn.status === 'complete') {
       await signIn.finalize({
         navigate: ({ session, decorateUrl }) => {
@@ -56,48 +54,69 @@ export default function SignInScreen() {
     }
   }
 
+  async function onSubmitPassword() {
+    setError(null)
+    const { error: signInError } = await signIn.password({ emailAddress: email, password })
+    if (signInError) {
+      setError(clerkMessage(signInError, 'Sign-in failed'))
+      return
+    }
+    await finalizeSignIn()
+  }
+
+  async function onSendCode() {
+    setError(null)
+    if (!email.trim()) {
+      setError('Enter your email first')
+      return
+    }
+    const { error: sendError } = await signIn.emailCode.sendCode({ emailAddress: email.trim() })
+    if (sendError) {
+      setError(clerkMessage(sendError, "Couldn't send the code"))
+      return
+    }
+    setCodeSent(true)
+  }
+
+  async function onVerifyCode() {
+    setError(null)
+    const { error: verifyError } = await signIn.emailCode.verifyCode({ code: code.trim() })
+    if (verifyError) {
+      setError(clerkMessage(verifyError, 'Invalid code'))
+      return
+    }
+    await finalizeSignIn()
+  }
+
   async function onGoogleSignIn() {
     setError(null)
     setGoogleSubmitting(true)
     try {
-      const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'kaidenz', path: 'sso-callback' })
-      console.log('[GoogleSignIn] redirectUrl:', redirectUrl)
-      const result = await startSSOFlow({
-        strategy: 'oauth_google',
-        redirectUrl,
-      })
-      // NOT JSON.stringify(result, ...) here — Clerk's returned resource
-      // objects can have lazy getters (e.g. verification) that throw when
-      // naively serialized. Log only the specific primitive fields we need.
-      const { createdSessionId, setActive, signIn, signUp } = result
-      console.log('[GoogleSignIn] createdSessionId:', createdSessionId)
-      console.log('[GoogleSignIn] signIn status:', signIn?.status)
-      console.log('[GoogleSignIn] signUp status:', signUp?.status)
+      const { createdSessionId, setActive } = await startGoogleAuthenticationFlow()
       if (createdSessionId && setActive) {
-        console.log('[GoogleSignIn] calling setActive...')
         await setActive({ session: createdSessionId })
-        console.log('[GoogleSignIn] setActive resolved — letting AuthGate navigate')
-        // Do NOT navigate here. Calling router.replace() immediately after
-        // setActive() races AuthGate: segments can update to reflect the
-        // new route before Clerk's isSignedIn context has actually flipped
-        // to true, so AuthGate sees { isSignedIn: false, inAuthGroup: false }
-        // and bounces straight back to sign-in — the exact loop this was
-        // causing. AuthGate already reacts to isSignedIn changing; let it
-        // be the only thing that ever calls router.replace after sign-in.
-      } else {
-        console.log('[GoogleSignIn] no createdSessionId — flow did not complete a session')
+        // Do NOT navigate here — AuthGate reacts to isSignedIn flipping
+        // and owns the post-sign-in redirect. Navigating from here races
+        // it (see the doctrine comment history in this file's git log).
       }
+      // No createdSessionId without an error = user dismissed the sheet.
     } catch (err) {
-      console.log('[GoogleSignIn] threw error — name:', (err as Error)?.name)
-      console.log('[GoogleSignIn] threw error — message:', (err as Error)?.message)
-      console.log('[GoogleSignIn] threw error — stack:', (err as Error)?.stack)
-      const e = err as unknown as { errors?: { message?: string; longMessage?: string; code?: string }[]; message?: string }
-      console.log('[GoogleSignIn] threw error — clerk errors array:', JSON.stringify(e.errors, null, 2))
-      setError(e.errors?.[0]?.message ?? e.message ?? 'Google sign-in failed')
+      const msg = clerkMessage(err, 'Google sign-in failed')
+      // User-cancel of the native sheet isn't an error worth showing.
+      if (!/cancel/i.test(msg)) setError(msg)
     } finally {
       setGoogleSubmitting(false)
     }
   }
+
+  function switchMode(next: 'password' | 'code') {
+    setMode(next)
+    setError(null)
+    setCode('')
+    setCodeSent(false)
+  }
+
+  const busy = submitting || googleSubmitting
 
   return (
     <SafeAreaView style={{ flex: 1, justifyContent: 'center', padding: 24 }}>
@@ -105,7 +124,7 @@ export default function SignInScreen() {
 
       <TouchableOpacity
         onPress={onGoogleSignIn}
-        disabled={googleSubmitting || submitting}
+        disabled={busy}
         style={{
           backgroundColor: '#fff',
           borderWidth: 1,
@@ -137,25 +156,51 @@ export default function SignInScreen() {
         onChangeText={setEmail}
         style={inputStyle}
       />
-      <TextInput
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-        style={inputStyle}
-      />
+
+      {mode === 'password' && (
+        <TextInput
+          placeholder="Password"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+          style={inputStyle}
+        />
+      )}
+
+      {mode === 'code' && codeSent && (
+        <TextInput
+          placeholder="6-digit code from your email"
+          keyboardType="number-pad"
+          value={code}
+          onChangeText={setCode}
+          style={inputStyle}
+        />
+      )}
+
       {error ? <Text style={{ color: '#c0392b', marginBottom: 12 }}>{error}</Text> : null}
+
+      {mode === 'password' ? (
+        <TouchableOpacity onPress={onSubmitPassword} disabled={busy} style={primaryBtn}>
+          {submitting ? <ActivityIndicator color="#fff" /> : <Text style={btnText}>Sign in</Text>}
+        </TouchableOpacity>
+      ) : !codeSent ? (
+        <TouchableOpacity onPress={onSendCode} disabled={busy} style={primaryBtn}>
+          {submitting ? <ActivityIndicator color="#fff" /> : <Text style={btnText}>Email me a sign-in code</Text>}
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity onPress={onVerifyCode} disabled={busy} style={primaryBtn}>
+          {submitting ? <ActivityIndicator color="#fff" /> : <Text style={btnText}>Verify & sign in</Text>}
+        </TouchableOpacity>
+      )}
+
       <TouchableOpacity
-        onPress={onSubmit}
-        disabled={submitting || googleSubmitting}
-        style={{
-          backgroundColor: '#111827',
-          borderRadius: 8,
-          padding: 14,
-          alignItems: 'center',
-        }}
+        onPress={() => switchMode(mode === 'password' ? 'code' : 'password')}
+        disabled={busy}
+        style={{ marginTop: 16, alignItems: 'center' }}
       >
-        {submitting ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontWeight: '500' }}>Sign in</Text>}
+        <Text style={{ color: '#6b7280', fontSize: 13 }}>
+          {mode === 'password' ? 'No password? Email me a sign-in code' : 'Use password instead'}
+        </Text>
       </TouchableOpacity>
     </SafeAreaView>
   )
@@ -168,3 +213,12 @@ const inputStyle = {
   padding: 12,
   marginBottom: 12,
 }
+
+const primaryBtn = {
+  backgroundColor: '#111827',
+  borderRadius: 8,
+  padding: 14,
+  alignItems: 'center' as const,
+}
+
+const btnText = { color: '#fff', fontWeight: '500' as const }

@@ -9,7 +9,9 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://kaidenz.ai",
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsua2FpZGVuei5haSQ"
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsua2FpZGVuei5haSQ",
+        "EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID": "30794482395-hjbesqafsjd2cnmbr5mstmmvq1qsr163.apps.googleusercontent.com",
+        "EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID": "30794482395-eul9nsii5ciocahjnr7shbrdgtjkfkra.apps.googleusercontent.com"
       }
     },
     "preview": {
@@ -19,14 +21,18 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://kaidenz.ai",
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsua2FpZGVuei5haSQ"
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsua2FpZGVuei5haSQ",
+        "EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID": "30794482395-hjbesqafsjd2cnmbr5mstmmvq1qsr163.apps.googleusercontent.com",
+        "EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID": "30794482395-eul9nsii5ciocahjnr7shbrdgtjkfkra.apps.googleusercontent.com"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_API_URL": "https://kaidenz.ai",
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsua2FpZGVuei5haSQ"
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsua2FpZGVuei5haSQ",
+        "EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID": "30794482395-hjbesqafsjd2cnmbr5mstmmvq1qsr163.apps.googleusercontent.com",
+        "EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID": "30794482395-eul9nsii5ciocahjnr7shbrdgtjkfkra.apps.googleusercontent.com"
       }
     }
   },

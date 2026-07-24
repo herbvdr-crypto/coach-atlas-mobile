@@ -39,7 +39,9 @@
       },
       "eas": {
         "projectId": "7c7e32bb-ced2-466a-b414-f27aaabe21dd"
-      }
+      },
+      "EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID": "30794482395-hjbesqafsjd2cnmbr5mstmmvq1qsr163.apps.googleusercontent.com",
+      "EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID": "30794482395-eul9nsii5ciocahjnr7shbrdgtjkfkra.apps.googleusercontent.com"
     },
     "icon": "./assets/icon.png"
   }
